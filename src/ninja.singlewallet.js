@@ -15,23 +15,23 @@
 			document.getElementById("singlearea").style.display = "none";
 		},
 
-		// generate bitcoin address and private key and update information in the HTML
+		// generate globaltoken address and private key and update information in the HTML
 		generateNewAddressAndKey: function () {
 			try {
-				var key = new Bitcoin.ECKey(false);
+				var key = new Globaltoken.ECKey(false);
 				key.setCompressed(true);
-				var bitcoinAddress = key.getBitcoinAddress();
-				var privateKeyWif = key.getBitcoinWalletImportFormat();
-				document.getElementById("btcaddress").innerHTML = bitcoinAddress;
+				var globaltokenAddress = key.getGlobaltokenAddress();
+				var privateKeyWif = key.getGlobaltokenWalletImportFormat();
+				document.getElementById("btcaddress").innerHTML = globaltokenAddress;
 				document.getElementById("btcprivwif").innerHTML = privateKeyWif;
 				var keyValuePair = {
-					"qrcode_public": bitcoinAddress,
+					"qrcode_public": globaltokenAddress,
 					"qrcode_private": privateKeyWif
 				};
 				qrCode.showQrCode(keyValuePair, 4);
 			}
 			catch (e) {
-				// browser does not have sufficient JavaScript support to generate a bitcoin address
+				// browser does not have sufficient JavaScript support to generate a globaltoken address
 				alert(e);
 				document.getElementById("btcaddress").innerHTML = "error";
 				document.getElementById("btcprivwif").innerHTML = "error";

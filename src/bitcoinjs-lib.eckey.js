@@ -1,4 +1,4 @@
-Bitcoin.KeyPool = (function () {
+Globaltoken.KeyPool = (function () {
 	var KeyPool = function () {
 		this.keyArray = [];
 
@@ -8,7 +8,7 @@ Bitcoin.KeyPool = (function () {
 			// prevent duplicates from being added to the array
 			for (var index in this.keyArray) {
 				var currentItem = this.keyArray[index];
-				if (currentItem != null && currentItem.priv != null && item.getBitcoinAddress() == currentItem.getBitcoinAddress()) {
+				if (currentItem != null && currentItem.priv != null && item.getGlobaltokenAddress() == currentItem.getGlobaltokenAddress()) {
 					doAdd = false;
 					break;
 				}
@@ -38,9 +38,9 @@ Bitcoin.KeyPool = (function () {
 			var pool = this.getArray();
 			for (var index in pool) {
 				var item = pool[index];
-				if (Bitcoin.Util.hasMethods(item, 'getBitcoinAddress', 'toString')) {
+				if (Globaltoken.Util.hasMethods(item, 'getGlobaltokenAddress', 'toString')) {
 					if (item != null) {
-						keyPoolString += "\"" + item.getBitcoinAddress() + "\"" + ", \"" + item.toString("wif") + "\"\n";
+						keyPoolString += "\"" + item.getGlobaltokenAddress() + "\"" + ", \"" + item.toString("wif") + "\"\n";
 					}
 				}
 			}
@@ -54,13 +54,13 @@ Bitcoin.KeyPool = (function () {
 	return new KeyPool();
 })();
 
-Bitcoin.Bip38Key = (function () {
+Globaltoken.Bip38Key = (function () {
 	var Bip38 = function (address, encryptedKey) {
 		this.address = address;
 		this.priv = encryptedKey;
 	};
 
-	Bip38.prototype.getBitcoinAddress = function () {
+	Bip38.prototype.getGlobaltokenAddress = function () {
 		return this.address;
 	};
 
@@ -71,10 +71,10 @@ Bitcoin.Bip38Key = (function () {
 	return Bip38;
 })();
 
-//https://raw.github.com/pointbiz/bitcoinjs-lib/9b2f94a028a7bc9bed94e0722563e9ff1d8e8db8/src/eckey.js
-Bitcoin.ECKey = (function () {
-	var ECDSA = Bitcoin.ECDSA;
-	var KeyPool = Bitcoin.KeyPool;
+//https://raw.github.com/pointbiz/globaltokenjs-lib/9b2f94a028a7bc9bed94e0722563e9ff1d8e8db8/src/eckey.js
+Globaltoken.ECKey = (function () {
+	var ECDSA = Globaltoken.ECDSA;
+	var KeyPool = Globaltoken.KeyPool;
 	var ecparams = EllipticCurve.getSECCurveByName("secp256k1");
 
 	var ECKey = function (input) {
@@ -85,7 +85,7 @@ Bitcoin.ECKey = (function () {
 		} else if (input instanceof BigInteger) {
 			// Input is a private key value
 			this.priv = input;
-		} else if (Bitcoin.Util.isArray(input)) {
+		} else if (Globaltoken.Util.isArray(input)) {
 			// Prepend zero byte to prevent interpretation as negative integer
 			this.priv = BigInteger.fromByteArrayUnsigned(input);
 		} else if ("string" == typeof input) {
@@ -135,7 +135,7 @@ Bitcoin.ECKey = (function () {
 		}
 	};
 
-	ECKey.privateKeyPrefix = 0x80; // mainnet 0x80    testnet 0xEF
+	ECKey.privateKeyPrefix = 0xA6; // mainnet 0x80    testnet 0xEF
 
 	/**
 	* Whether public keys should be returned compressed by default.
@@ -203,16 +203,16 @@ Bitcoin.ECKey = (function () {
 	ECKey.prototype.getPubKeyHash = function () {
 		if (this.compressed) {
 			if (this.pubKeyHashComp) return this.pubKeyHashComp;
-			return this.pubKeyHashComp = Bitcoin.Util.sha256ripe160(this.getPub());
+			return this.pubKeyHashComp = Globaltoken.Util.sha256ripe160(this.getPub());
 		} else {
 			if (this.pubKeyHashUncomp) return this.pubKeyHashUncomp;
-			return this.pubKeyHashUncomp = Bitcoin.Util.sha256ripe160(this.getPub());
+			return this.pubKeyHashUncomp = Globaltoken.Util.sha256ripe160(this.getPub());
 		}
 	};
 
-	ECKey.prototype.getBitcoinAddress = function () {
+	ECKey.prototype.getGlobaltokenAddress = function () {
 		var hash = this.getPubKeyHash();
-		var addr = new Bitcoin.Address(hash);
+		var addr = new Globaltoken.Address(hash);
 		return addr.toString();
 	};
 
@@ -221,7 +221,7 @@ Bitcoin.ECKey = (function () {
 	*/
 	ECKey.prototype.setPub = function (pub) {
 		// byte array
-		if (Bitcoin.Util.isArray(pub)) {
+		if (Globaltoken.Util.isArray(pub)) {
 			pub = Crypto.util.bytesToHex(pub).toString().toUpperCase();
 		}
 		var ecPoint = ecparams.getCurve().decodePointHex(pub);
@@ -231,28 +231,28 @@ Bitcoin.ECKey = (function () {
 	};
 
 	// Sipa Private Key Wallet Import Format 
-	ECKey.prototype.getBitcoinWalletImportFormat = function () {
-		var bytes = this.getBitcoinPrivateKeyByteArray();
+	ECKey.prototype.getGlobaltokenWalletImportFormat = function () {
+		var bytes = this.getGlobaltokenPrivateKeyByteArray();
 		if (bytes == null) return "";
 		bytes.unshift(ECKey.privateKeyPrefix); // prepend 0x80 byte
 		if (this.compressed) bytes.push(0x01); // append 0x01 byte for compressed format
 		var checksum = Crypto.SHA256(Crypto.SHA256(bytes, { asBytes: true }), { asBytes: true });
 		bytes = bytes.concat(checksum.slice(0, 4));
-		var privWif = Bitcoin.Base58.encode(bytes);
+		var privWif = Globaltoken.Base58.encode(bytes);
 		return privWif;
 	};
 
 	// Private Key Hex Format 
-	ECKey.prototype.getBitcoinHexFormat = function () {
-		return Crypto.util.bytesToHex(this.getBitcoinPrivateKeyByteArray()).toString().toUpperCase();
+	ECKey.prototype.getGlobaltokenHexFormat = function () {
+		return Crypto.util.bytesToHex(this.getGlobaltokenPrivateKeyByteArray()).toString().toUpperCase();
 	};
 
 	// Private Key Base64 Format 
-	ECKey.prototype.getBitcoinBase64Format = function () {
-		return Crypto.util.bytesToBase64(this.getBitcoinPrivateKeyByteArray());
+	ECKey.prototype.getGlobaltokenBase64Format = function () {
+		return Crypto.util.bytesToBase64(this.getGlobaltokenPrivateKeyByteArray());
 	};
 
-	ECKey.prototype.getBitcoinPrivateKeyByteArray = function () {
+	ECKey.prototype.getGlobaltokenPrivateKeyByteArray = function () {
 		if (this.priv == null) return null;
 		// Get a copy of private key as a byte array
 		var bytes = this.priv.toByteArrayUnsigned();
@@ -264,14 +264,14 @@ Bitcoin.ECKey = (function () {
 	ECKey.prototype.toString = function (format) {
 		format = format || "";
 		if (format.toString().toLowerCase() == "base64" || format.toString().toLowerCase() == "b64") {
-			return this.getBitcoinBase64Format();
+			return this.getGlobaltokenBase64Format();
 		}
 		// Wallet Import Format
 		else if (format.toString().toLowerCase() == "wif") {
-			return this.getBitcoinWalletImportFormat();
+			return this.getGlobaltokenWalletImportFormat();
 		}
 		else {
-			return this.getBitcoinHexFormat();
+			return this.getGlobaltokenHexFormat();
 		}
 	};
 
@@ -287,7 +287,7 @@ Bitcoin.ECKey = (function () {
 	* Parse a wallet import format private key contained in a string.
 	*/
 	ECKey.decodeWalletImportFormat = function (privStr) {
-		var bytes = Bitcoin.Base58.decode(privStr);
+		var bytes = Globaltoken.Base58.decode(privStr);
 		var hash = bytes.slice(0, 33);
 		var checksum = Crypto.SHA256(Crypto.SHA256(hash, { asBytes: true }), { asBytes: true });
 		if (checksum[0] != bytes[33] ||
@@ -307,7 +307,7 @@ Bitcoin.ECKey = (function () {
 	* Parse a compressed wallet import format private key contained in a string.
 	*/
 	ECKey.decodeCompressedWalletImportFormat = function (privStr) {
-		var bytes = Bitcoin.Base58.decode(privStr);
+		var bytes = Globaltoken.Base58.decode(privStr);
 		var hash = bytes.slice(0, 34);
 		var checksum = Crypto.SHA256(Crypto.SHA256(hash, { asBytes: true }), { asBytes: true });
 		if (checksum[0] != bytes[34] ||
@@ -333,16 +333,16 @@ Bitcoin.ECKey = (function () {
 	// 51 characters base58, always starts with a '5'
 	ECKey.isWalletImportFormat = function (key) {
 		key = key.toString();
-		return (ECKey.privateKeyPrefix == 0x80) ?
-							(/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) :
+		return (ECKey.privateKeyPrefix == 0xA6) ?
+							(/^6[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) :
 							(/^9[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key));
 	};
 
 	// 52 characters base58
 	ECKey.isCompressedWalletImportFormat = function (key) {
 		key = key.toString();
-		return (ECKey.privateKeyPrefix == 0x80) ?
-							(/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) :
+		return (ECKey.privateKeyPrefix == 0xA6) ?
+							(/^[R][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) :
 							(/^c[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key));
 	};
 
